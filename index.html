@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#534AB7" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Stres Akademik" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Skala Stres Akademik</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#eeede9;color:#1a1a1a;min-height:100vh;display:flex;justify-content:center;}
+    .app{width:100%;max-width:430px;min-height:100vh;padding-bottom:2rem;}
+    .header{background:#534AB7;border-radius:0 0 16px 16px;padding:1.5rem 1.25rem 2rem;color:white;text-align:center;}
+    .header .icon{font-size:32px;margin-bottom:8px;}
+    .header h1{font-size:18px;font-weight:600;margin-bottom:4px;}
+    .header p{font-size:13px;opacity:.85;}
+    .page-card{background:#fff;border:.5px solid rgba(0,0,0,.12);border-radius:12px;margin:1rem;padding:1.25rem;}
+    .page-card h2{font-size:16px;font-weight:600;margin-bottom:8px;}
+    .page-card p{font-size:14px;color:#6b6b6b;line-height:1.6;margin-bottom:12px;}
+    .field-label{font-size:13px;font-weight:500;margin-bottom:8px;display:block;}
+    .text-input{width:100%;height:48px;border:.5px solid rgba(0,0,0,.22);border-radius:8px;background:#f5f5f3;color:#1a1a1a;font-size:15px;padding:0 14px;font-family:inherit;outline:none;margin-bottom:12px;}
+    .text-input:focus{border-color:#534AB7;box-shadow:0 0 0 3px #EEEDFE;}
+    .btn-primary{width:100%;height:48px;border:none;border-radius:8px;background:#534AB7;color:white;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;}
+    .btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+    .avatar-circle{width:52px;height:52px;border-radius:50%;background:#EEEDFE;color:#534AB7;font-size:18px;font-weight:600;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;}
+    .scale-row{display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:.5px solid rgba(0,0,0,.1);}
+    .scale-row:last-child{border-bottom:none;}
+    .scale-num{width:26px;height:26px;border-radius:8px;background:#EEEDFE;color:#534AB7;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .scale-box{border:.5px solid rgba(0,0,0,.1);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+    .progress-wrap{padding:1rem 1.25rem 0;}
+    .progress-bar{height:5px;background:#e0dfd9;border-radius:99px;margin-bottom:6px;}
+    .progress-fill{height:5px;background:#534AB7;border-radius:99px;transition:width .3s;}
+    .progress-text{font-size:12px;color:#6b6b6b;text-align:right;}
+    .section-badge{display:inline-flex;align-items:center;background:#EEEDFE;color:#534AB7;font-size:11px;font-weight:600;padding:5px 12px;border-radius:8px;margin:1rem 1rem .5rem;}
+    .q-card{background:#fff;border:.5px solid rgba(0,0,0,.12);border-radius:12px;margin:.5rem 1rem;padding:1rem 1.25rem;}
+    .q-num{font-size:11px;color:#9b9b9b;margin-bottom:6px;}
+    .q-text{font-size:14px;line-height:1.6;margin-bottom:16px;}
+    .options{display:flex;gap:6px;}
+    .opt-btn{flex:1;height:46px;border:.5px solid rgba(0,0,0,.2);border-radius:8px;background:#f5f5f3;color:#6b6b6b;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-family:inherit;}
+    .opt-btn.selected{background:#EEEDFE;border-color:#534AB7;color:#3C3489;}
+    .opt-label{font-size:9px;font-weight:400;}
+    .nav{display:flex;gap:10px;padding:1.25rem 1rem 0;}
+    .btn-prev{flex:0 0 auto;padding:0 18px;height:48px;border:.5px solid rgba(0,0,0,.2);border-radius:8px;background:#f5f5f3;color:#6b6b6b;font-size:20px;cursor:pointer;font-family:inherit;}
+    .btn-next{flex:1;height:48px;border:none;border-radius:8px;background:#534AB7;color:white;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;}
+    .btn-next:disabled{opacity:.4;cursor:not-allowed;}
+    .result-wrap{padding:1.25rem 1rem;}
+    .result-card{background:#fff;border:.5px solid rgba(0,0,0,.12);border-radius:12px;overflow:hidden;}
+    .result-header{padding:1.75rem 1.25rem;text-align:center;}
+    .result-score{font-size:52px;font-weight:700;line-height:1;margin-bottom:4px;}
+    .result-label{font-size:16px;font-weight:600;margin-bottom:6px;}
+    .result-subtitle{font-size:13px;color:#6b6b6b;line-height:1.5;}
+    .result-bar-wrap{padding:1rem 1.25rem 1.25rem;}
+    .result-bar-track{height:8px;background:#f5f5f3;border-radius:99px;overflow:hidden;}
+    .result-bar-fill{height:8px;border-radius:99px;transition:width .8s ease;}
+    .result-range{display:flex;justify-content:space-between;font-size:11px;color:#9b9b9b;margin-top:4px;}
+    .advice-section{border-top:.5px solid rgba(0,0,0,.1);padding:1.25rem;}
+    .advice-title{font-size:11px;font-weight:600;color:#6b6b6b;margin-bottom:12px;text-transform:uppercase;letter-spacing:.8px;}
+    .advice-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;font-size:14px;line-height:1.5;}
+    .advice-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+    .btn-reset{width:calc(100% - 2rem);margin:.75rem 1rem 0;height:48px;border:.5px solid rgba(0,0,0,.2);border-radius:8px;background:transparent;color:#6b6b6b;font-size:14px;font-family:inherit;cursor:pointer;}
+    .saving-banner{margin:1rem 1rem 0;background:#EEEDFE;border-radius:8px;padding:10px 14px;font-size:13px;color:#534AB7;text-align:center;}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="icon">&#x1F9E0;</div>
+    <h1>Skala Stres Akademik</h1>
+    <p>Kuesioner untuk Remaja</p>
+  </div>
+  <div id="content"></div>
+</div>
+<script>
+var SCRIPT_URL="https://script.google.com/macros/s/AKfycbzBgVN1a8APMqsJhvqNheMwqW8_fTsk0u6KeX0mtQm1j9ZIco48UEsTHmYt92be82Q/exec";
+var questions=[{section:"A. Tekanan Akademik",items:["Saya merasa tugas sekolah saya terlalu banyak.","Saya merasa tertekan saat menghadapi ujian.","Saya takut mendapatkan nilai yang buruk.","Saya merasa waktu belajar saya tidak cukup.","Saya sering merasa lelah karena kegiatan sekolah."]},{section:"B. Tekanan Orang Tua & Lingkungan",items:["Orang tua saya menuntut nilai yang tinggi.","Saya merasa dibandingkan dengan siswa lain.","Saya takut mengecewakan orang tua saya.","Saya merasa harus selalu lebih baik dari teman-teman saya.","Saya merasa lingkungan sekolah terlalu kompetitif."]},{section:"C. Kondisi Emosional & Fisik",items:["Saya sulit tidur karena memikirkan pelajaran.","Saya kesulitan berkonsentrasi saat belajar.","Saya merasa cemas ketika belajar.","Saya mudah marah atau sensitif karena tekanan sekolah.","Saya kehilangan motivasi untuk belajar."]},{section:"D. Perilaku Akademik",items:["Saya sering menunda-nunda mengerjakan tugas (prokrastinasi).","Saya kurang percaya diri dengan kemampuan belajar saya.","Saya kesulitan mengatur waktu antara belajar dan kegiatan lain.","Saya merasa tidak punya waktu untuk istirahat.","Saya merasa kewalahan oleh kegiatan sekolah sehari-hari."]}];
+var scaleLabels=["STS","TS","N","S","SS"];
+var scaleFull=["Sangat Tidak Setuju","Tidak Setuju","Netral","Setuju","Sangat Setuju"];
+var levels=[{min:20,max:35,label:"Stres Sangat Rendah",color:"#1D9E75",bg:"#E1F5EE",advice:["Pertahankan kebiasaan belajar yang sehat.","Seimbangkan waktu belajar dengan istirahat yang cukup.","Terus berpartisipasi dalam kegiatan sosial yang positif."]},{min:36,max:51,label:"Stres Rendah",color:"#639922",bg:"#EAF3DE",advice:["Tingkatkan manajemen waktu kamu.","Hindari menunda-nunda tugas sekolah.","Buat jadwal belajar harian yang lebih terstruktur."]},{min:52,max:67,label:"Stres Sedang",color:"#BA7517",bg:"#FAEEDA",advice:["Kurangi tekanan belajar yang berlebihan.","Praktikkan teknik relaksasi dan tidur yang cukup.","Ceritakan kesulitanmu kepada guru, orang tua, atau teman dekat."]},{min:68,max:83,label:"Stres Tinggi",color:"#185FA5",bg:"#E6F1FB",advice:["Hubungi konselor atau pembimbing sekolah kamu.","Kurangi beban akademik yang berlebihan.","Cari dukungan emosional yang lebih kuat dari keluarga dan teman.","Sesuaikan target akademikmu agar lebih realistis."]},{min:84,max:100,label:"Stres Sangat Tinggi",color:"#A32D2D",bg:"#FCEBEB",advice:["Segera cari bantuan dari konselor atau psikolog profesional.","Orang tua dan sekolah harus turun tangan memberikan bantuan intensif.","Utamakan kesehatan mental dan kesejahteraan di atas prestasi akademik.","Kurangi sementara beban akademik."]}];
+var flat=[];
+for(var si=0;si<questions.length;si++)for(var qi=0;qi<questions[si].items.length;qi++)flat.push({q:questions[si].items[qi],secIdx:si});
+var answers=new Array(20).fill(0),page=-2,userName="";
+function getInitials(n){return n.trim().split(/\s+/).map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);}
+function getLevel(s){for(var i=0;i<levels.length;i++)if(s>=levels[i].min&&s<=levels[i].max)return levels[i];return levels[4];}
+function getLevelCondition(l){return{"Stres Sangat Rendah":"Kamu mampu mengelola tekanan akademik dengan baik.","Stres Rendah":"Tekanan akademik mulai meningkat namun masih dapat dikelola.","Stres Sedang":"Stres akademik mulai memengaruhi emosi dan konsentrasimu.","Stres Tinggi":"Stres akademik mulai berdampak pada kesehatan mental dan performa belajarmu.","Stres Sangat Tinggi":"Kamu mengalami tekanan akademik yang berat dan berisiko burnout serius."}[l]||"";}
+function renderNamePage(){document.getElementById("content").innerHTML='<div class="page-card"><h2>Selamat datang!</h2><p>Sebelum memulai, masukkan nama lengkapmu terlebih dahulu.</p><label class="field-label">Nama Lengkap</label><input class="text-input" type="text" id="nameInput" placeholder="Contoh: Budi Santoso" maxlength="60" oninput="checkName()" onkeydown="if(event.key===\'Enter\')submitName()"/><button class="btn-primary" id="btnNext" disabled onclick="submitName()">Lanjut &#x2192;</button></div>';setTimeout(function(){var i=document.getElementById("nameInput");if(i)i.focus();},100);}
+function checkName(){document.getElementById("btnNext").disabled=document.getElementById("nameInput").value.trim().length<2;}
+function submitName(){var v=document.getElementById("nameInput").value.trim();if(v.length<2)return;userName=v;page=-1;render();}
+function renderIntro(){document.getElementById("content").innerHTML='<div class="page-card"><div style="text-align:center;margin-bottom:14px;"><div class="avatar-circle">'+getInitials(userName)+'</div><p style="font-size:14px;color:#6b6b6b;">Halo, <strong>'+userName+'</strong>!</p></div><h2>Petunjuk Pengisian</h2><p>Pilih jawaban yang paling menggambarkan kondisimu selama <strong>sebulan terakhir</strong>.</p><div class="scale-box">'+[1,2,3,4,5].map(function(n,i){return'<div class="scale-row"><div class="scale-num">'+n+'</div><div>'+scaleFull[i]+'</div></div>';}).join("")+'</div><button class="btn-primary" onclick="page=0;render()">Mulai Kuesioner</button></div>';}
+function renderQuestion(){var item=flat[page];var pct=Math.round((page/flat.length)*100);var answered=answers[page];var isLast=page===19;var opts=[1,2,3,4,5].map(function(n,i){return'<button class="opt-btn '+(answered===n?"selected":"")+'" onclick="selectAnswer('+n+')" title="'+scaleFull[i]+'">'+n+'<span class="opt-label">'+scaleLabels[i]+'</span></button>';}).join("");document.getElementById("content").innerHTML='<div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div><div class="progress-text">'+(page+1)+' dari '+flat.length+'</div></div><div class="section-badge">'+questions[item.secIdx].section+'</div><div class="q-card"><div class="q-num">Pernyataan '+(page+1)+'</div><div class="q-text">'+item.q+'</div><div class="options">'+opts+'</div></div><div class="nav"><button class="btn-prev" onclick="page--;render()">&#x2190;</button><button class="btn-next" '+(answered===0?"disabled ":"")+'onclick="'+(isLast?"showResult()":"page++;render()")+'">'+( isLast?"Lihat Hasil":"Lanjut")+'</button></div>';}
+function selectAnswer(val){answers[page]=val;renderQuestion();if(page<19)setTimeout(function(){page++;render();},280);}
+function saveData(name,score,level){try{var now=new Date().toLocaleString("id-ID",{timeZone:"Asia/Jakarta"});fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({nama:name,skor:score,kategori:level,waktu:now})});}catch(e){console.log("Gagal:",e);}}
+function showResult(){var score=answers.reduce(function(a,b){return a+b;},0);var level=getLevel(score);var pct=Math.round(((score-20)/80)*100);saveData(userName,score,level.label);var adv=level.advice.map(function(a){return'<div class="advice-item"><div class="advice-dot" style="background:'+level.color+';"></div><span>'+a+'</span></div>';}).join("");document.getElementById("content").innerHTML='<div class="saving-banner">&#x1F4BE; Data kamu sedang disimpan...</div><div class="result-wrap"><div class="result-card"><div class="result-header" style="background:'+level.bg+';"><div class="avatar-circle" style="background:'+level.bg+';color:'+level.color+';border:2px solid '+level.color+';">'+getInitials(userName)+'</div><div style="font-size:13px;color:'+level.color+';margin-bottom:10px;">'+userName+'</div><div class="result-score" style="color:'+level.color+';">'+score+'</div><div class="result-label" style="color:'+level.color+';">'+level.label+'</div><div class="result-subtitle">'+getLevelCondition(level.label)+'</div></div><div class="result-bar-wrap"><div class="result-bar-track"><div class="result-bar-fill" id="rbar" style="width:0%;background:'+level.color+';"></div></div><div class="result-range"><span>20 (Sangat Rendah)</span><span>100 (Sangat Tinggi)</span></div></div><div class="advice-section"><div class="advice-title">Saran untuk '+userName.split(" ")[0]+'</div>'+adv+'</div></div><button class="btn-reset" onclick="reset()">&#x21BA; Isi Ulang Kuesioner</button></div>';setTimeout(function(){var b=document.getElementById("rbar");if(b)b.style.width=pct+"%";},150);}
+function reset(){answers=new Array(20).fill(0);userName="";page=-2;render();}
+function render(){if(page===-2)renderNamePage();else if(page===-1)renderIntro();else renderQuestion();}
+render();
+if('serviceWorker' in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js');});
+</script>
+</body>
+</html>
