@@ -43,6 +43,7 @@
     .opt-label{font-size:9px;font-weight:400;}
     .nav{display:flex;gap:10px;padding:1.25rem 1rem 0;}
     .btn-prev{flex:0 0 auto;padding:0 18px;height:48px;border:.5px solid rgba(0,0,0,.2);border-radius:8px;background:#f5f5f3;color:#6b6b6b;font-size:20px;cursor:pointer;font-family:inherit;}
+    .btn-prev:disabled{opacity:.4;cursor:not-allowed;}
     .btn-next{flex:1;height:48px;border:none;border-radius:8px;background:#534AB7;color:white;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;}
     .btn-next:disabled{opacity:.4;cursor:not-allowed;}
     .result-wrap{padding:1.25rem 1rem;}
@@ -81,19 +82,102 @@ var levels=[{min:20,max:35,label:"Stres Sangat Rendah",color:"#1D9E75",bg:"#E1F5
 var flat=[];
 for(var si=0;si<questions.length;si++)for(var qi=0;qi<questions[si].items.length;qi++)flat.push({q:questions[si].items[qi],secIdx:si});
 var answers=new Array(20).fill(0),page=-2,userName="";
+var advanceTimer=null;
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function clearAdvanceTimer(){
+  if(advanceTimer){clearTimeout(advanceTimer);advanceTimer=null;}
+}
 function getInitials(n){return n.trim().split(/\s+/).map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);}
 function getLevel(s){for(var i=0;i<levels.length;i++)if(s>=levels[i].min&&s<=levels[i].max)return levels[i];return levels[4];}
 function getLevelCondition(l){return{"Stres Sangat Rendah":"Kamu mampu mengelola tekanan akademik dengan baik.","Stres Rendah":"Tekanan akademik mulai meningkat namun masih dapat dikelola.","Stres Sedang":"Stres akademik mulai memengaruhi emosi dan konsentrasimu.","Stres Tinggi":"Stres akademik mulai berdampak pada kesehatan mental dan performa belajarmu.","Stres Sangat Tinggi":"Kamu mengalami tekanan akademik yang berat dan berisiko burnout serius."}[l]||"";}
-function renderNamePage(){document.getElementById("content").innerHTML='<div class="page-card"><h2>Selamat datang!</h2><p>Sebelum memulai, masukkan nama lengkapmu terlebih dahulu.</p><label class="field-label">Nama Lengkap</label><input class="text-input" type="text" id="nameInput" placeholder="Contoh: Budi Santoso" maxlength="60" oninput="checkName()" onkeydown="if(event.key===\'Enter\')submitName()"/><button class="btn-primary" id="btnNext" disabled onclick="submitName()">Lanjut &#x2192;</button></div>';setTimeout(function(){var i=document.getElementById("nameInput");if(i)i.focus();},100);}
+
+function renderNamePage(){
+  clearAdvanceTimer();
+  document.getElementById("content").innerHTML='<div class="page-card"><h2>Selamat datang!</h2><p>Sebelum memulai, masukkan nama lengkapmu terlebih dahulu.</p><label class="field-label">Nama Lengkap</label><input class="text-input" type="text" id="nameInput" placeholder="Contoh: Budi Santoso" maxlength="60" oninput="checkName()" onkeydown="if(event.key===\'Enter\')submitName()"/><button class="btn-primary" id="btnNext" disabled onclick="submitName()">Lanjut &#x2192;</button></div>';
+  setTimeout(function(){var i=document.getElementById("nameInput");if(i)i.focus();},100);
+}
 function checkName(){document.getElementById("btnNext").disabled=document.getElementById("nameInput").value.trim().length<2;}
-function submitName(){var v=document.getElementById("nameInput").value.trim();if(v.length<2)return;userName=v;page=-1;render();}
-function renderIntro(){document.getElementById("content").innerHTML='<div class="page-card"><div style="text-align:center;margin-bottom:14px;"><div class="avatar-circle">'+getInitials(userName)+'</div><p style="font-size:14px;color:#6b6b6b;">Halo, <strong>'+userName+'</strong>!</p></div><h2>Petunjuk Pengisian</h2><p>Pilih jawaban yang paling menggambarkan kondisimu selama <strong>sebulan terakhir</strong>.</p><div class="scale-box">'+[1,2,3,4,5].map(function(n,i){return'<div class="scale-row"><div class="scale-num">'+n+'</div><div>'+scaleFull[i]+'</div></div>';}).join("")+'</div><button class="btn-primary" onclick="page=0;render()">Mulai Kuesioner</button></div>';}
-function renderQuestion(){var item=flat[page];var pct=Math.round((page/flat.length)*100);var answered=answers[page];var isLast=page===19;var opts=[1,2,3,4,5].map(function(n,i){return'<button class="opt-btn '+(answered===n?"selected":"")+'" onclick="selectAnswer('+n+')" title="'+scaleFull[i]+'">'+n+'<span class="opt-label">'+scaleLabels[i]+'</span></button>';}).join("");document.getElementById("content").innerHTML='<div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div><div class="progress-text">'+(page+1)+' dari '+flat.length+'</div></div><div class="section-badge">'+questions[item.secIdx].section+'</div><div class="q-card"><div class="q-num">Pernyataan '+(page+1)+'</div><div class="q-text">'+item.q+'</div><div class="options">'+opts+'</div></div><div class="nav"><button class="btn-prev" onclick="page--;render()">&#x2190;</button><button class="btn-next" '+(answered===0?"disabled ":"")+'onclick="'+(isLast?"showResult()":"page++;render()")+'">'+( isLast?"Lihat Hasil":"Lanjut")+'</button></div>';}
-function selectAnswer(val){answers[page]=val;renderQuestion();if(page<19)setTimeout(function(){page++;render();},280);}
-function saveData(name,score,level){try{var now=new Date().toLocaleString("id-ID",{timeZone:"Asia/Jakarta"});fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({nama:name,skor:score,kategori:level,waktu:now})});}catch(e){console.log("Gagal:",e);}}
-function showResult(){var score=answers.reduce(function(a,b){return a+b;},0);var level=getLevel(score);var pct=Math.round(((score-20)/80)*100);saveData(userName,score,level.label);var adv=level.advice.map(function(a){return'<div class="advice-item"><div class="advice-dot" style="background:'+level.color+';"></div><span>'+a+'</span></div>';}).join("");document.getElementById("content").innerHTML='<div class="saving-banner">&#x1F4BE; Data kamu sedang disimpan...</div><div class="result-wrap"><div class="result-card"><div class="result-header" style="background:'+level.bg+';"><div class="avatar-circle" style="background:'+level.bg+';color:'+level.color+';border:2px solid '+level.color+';">'+getInitials(userName)+'</div><div style="font-size:13px;color:'+level.color+';margin-bottom:10px;">'+userName+'</div><div class="result-score" style="color:'+level.color+';">'+score+'</div><div class="result-label" style="color:'+level.color+';">'+level.label+'</div><div class="result-subtitle">'+getLevelCondition(level.label)+'</div></div><div class="result-bar-wrap"><div class="result-bar-track"><div class="result-bar-fill" id="rbar" style="width:0%;background:'+level.color+';"></div></div><div class="result-range"><span>20 (Sangat Rendah)</span><span>100 (Sangat Tinggi)</span></div></div><div class="advice-section"><div class="advice-title">Saran untuk '+userName.split(" ")[0]+'</div>'+adv+'</div></div><button class="btn-reset" onclick="reset()">&#x21BA; Isi Ulang Kuesioner</button></div>';setTimeout(function(){var b=document.getElementById("rbar");if(b)b.style.width=pct+"%";},150);}
-function reset(){answers=new Array(20).fill(0);userName="";page=-2;render();}
-function render(){if(page===-2)renderNamePage();else if(page===-1)renderIntro();else renderQuestion();}
+function submitName(){
+  var v=document.getElementById("nameInput").value.trim();
+  if(v.length<2)return;
+  userName=v;page=-1;render();
+}
+function renderIntro(){
+  clearAdvanceTimer();
+  var safeName=escapeHtml(userName);
+  document.getElementById("content").innerHTML='<div class="page-card"><div style="text-align:center;margin-bottom:14px;"><div class="avatar-circle">'+escapeHtml(getInitials(userName))+'</div><p style="font-size:14px;color:#6b6b6b;">Halo, <strong>'+safeName+'</strong>!</p></div><h2>Petunjuk Pengisian</h2><p>Pilih jawaban yang paling menggambarkan kondisimu selama <strong>sebulan terakhir</strong>.</p><div class="scale-box">'+[1,2,3,4,5].map(function(n,i){return'<div class="scale-row"><div class="scale-num">'+n+'</div><div>'+scaleFull[i]+'</div></div>';}).join("")+'</div><button class="btn-primary" onclick="page=0;render()">Mulai Kuesioner</button></div>';
+}
+function renderQuestion(){
+  var item=flat[page];
+  var pct=Math.round((page/flat.length)*100);
+  var answered=answers[page];
+  var isLast=page===19;
+  var isFirst=page===0;
+  var opts=[1,2,3,4,5].map(function(n,i){return'<button class="opt-btn '+(answered===n?"selected":"")+'" onclick="selectAnswer('+n+')" title="'+scaleFull[i]+'">'+n+'<span class="opt-label">'+scaleLabels[i]+'</span></button>';}).join("");
+  document.getElementById("content").innerHTML='<div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div><div class="progress-text">'+(page+1)+' dari '+flat.length+'</div></div><div class="section-badge">'+questions[item.secIdx].section+'</div><div class="q-card"><div class="q-num">Pernyataan '+(page+1)+'</div><div class="q-text">'+item.q+'</div><div class="options">'+opts+'</div></div><div class="nav"><button class="btn-prev" '+(isFirst?"disabled ":"")+'onclick="goPrev()">&#x2190;</button><button class="btn-next" '+(answered===0?"disabled ":"")+'onclick="'+(isLast?"showResult()":"goNext()")+'">'+( isLast?"Lihat Hasil":"Lanjut")+'</button></div>';
+}
+function goPrev(){
+  clearAdvanceTimer();
+  page--;
+  render();
+}
+function goNext(){
+  clearAdvanceTimer();
+  page++;
+  render();
+}
+function selectAnswer(val){
+  clearAdvanceTimer();
+  answers[page]=val;
+  renderQuestion();
+  if(page<19){
+    advanceTimer=setTimeout(function(){
+      advanceTimer=null;
+      page++;
+      render();
+    },280);
+  }
+}
+function saveData(name,score,level){
+  var now=new Date().toLocaleString("id-ID",{timeZone:"Asia/Jakarta"});
+  fetch(SCRIPT_URL,{
+    method:"POST",
+    mode:"no-cors",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({nama:name,skor:score,kategori:level,waktu:now})
+  }).catch(function(e){
+    console.log("Gagal menyimpan data:",e);
+  });
+}
+function showResult(){
+  clearAdvanceTimer();
+  var score=answers.reduce(function(a,b){return a+b;},0);
+  var level=getLevel(score);
+  var pct=Math.round(((score-20)/80)*100);
+  saveData(userName,score,level.label);
+  var safeName=escapeHtml(userName);
+  var firstName=escapeHtml(userName.split(" ")[0]);
+  var adv=level.advice.map(function(a){return'<div class="advice-item"><div class="advice-dot" style="background:'+level.color+';"></div><span>'+a+'</span></div>';}).join("");
+  document.getElementById("content").innerHTML='<div class="saving-banner">&#x1F4BE; Data kamu sedang disimpan...</div><div class="result-wrap"><div class="result-card"><div class="result-header" style="background:'+level.bg+';"><div class="avatar-circle" style="background:'+level.bg+';color:'+level.color+';border:2px solid '+level.color+';">'+escapeHtml(getInitials(userName))+'</div><div style="font-size:13px;color:'+level.color+';margin-bottom:10px;">'+safeName+'</div><div class="result-score" style="color:'+level.color+';">'+score+'</div><div class="result-label" style="color:'+level.color+';">'+level.label+'</div><div class="result-subtitle">'+getLevelCondition(level.label)+'</div></div><div class="result-bar-wrap"><div class="result-bar-track"><div class="result-bar-fill" id="rbar" style="width:0%;background:'+level.color+';"></div></div><div class="result-range"><span>20 (Sangat Rendah)</span><span>100 (Sangat Tinggi)</span></div></div><div class="advice-section"><div class="advice-title">Saran untuk '+firstName+'</div>'+adv+'</div></div><button class="btn-reset" onclick="reset()">&#x21BA; Isi Ulang Kuesioner</button></div>';
+  setTimeout(function(){var b=document.getElementById("rbar");if(b)b.style.width=pct+"%";},150);
+}
+function reset(){
+  clearAdvanceTimer();
+  answers=new Array(20).fill(0);
+  userName="";
+  page=-2;
+  render();
+}
+function render(){
+  if(page===-2)renderNamePage();
+  else if(page===-1)renderIntro();
+  else renderQuestion();
+}
 render();
 if('serviceWorker' in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js');});
 </script>
